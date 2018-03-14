@@ -1,48 +1,50 @@
-# fastai
+# fastai with onnx to caffe2 export support
 
-The fast.ai deep learning library, lessons, and tutorials.
+this is a clone of fastai from the 12.3.2018 modified to support ONNX serialization to be used with caffe2
 
-Copyright 2017 onwards, Jeremy Howard. Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. A copy of the License is provided in the LICENSE file in this repository.
+## installation
 
-## Current Status
+`git clone https://github.com/jaidmin/fastai `
 
-This is an alpha version. Most of the library is quite well tested since many students have used it to complete the [Practical Deep Learning for Coders](http://course.fast.ai). course. However it hasn't been widely used yet outside of the course, so you may find some missing features or rough edges. If you're interested in using the library in your own projects, we're happy to help support any bug fixes or feature additions you need&mdash;please use http://forums.fast.ai to discuss.
+`cd fastai`
 
-Recommended installation approach is to clone fastai using `git`:
+`conda env update`
 
-```sh
-git clone https://github.com/fastai/fastai.git
-```
-Then, `cd` to the fastai folder and create the python environment:
+this sets up the fastai environment
 
-```sh
-cd fastai
-conda env update
-```
-This downloads all of the dependencies and then all you have to do is:
+for the onnx environement run:
 
-```sh
-conda activate fastai
-```
+`conda create -n onnx python=3 anaconda`
 
-To update everything at any time, cd to your repo and:
+`source activate onnx`
 
-```sh
-git pull
-conda env update
-```
+`conda install -c caffe2 caffe2`
 
-To install a cpu only environment instead:
-```sh
-cd fastai
-conda env update -f environment-cpu.yml
-```
+`pip install git+git://github.com/onnx/onnx.git@master`
 
-You can also install this library in the local environment using ```pip```
+## documentation
 
-```sh
-pip install fastai
-```
+step by step notebook for exporting a model to onnx: courses/dl1/onnx-export-project.ipynb
 
-However this is not currently the recommended approach, since the library is being updated much more frequently than the pip release, fewer people are using and testing the pip version, and pip needs to compile many libraries from scratch (which can be slow). 
+step by step notebook for importing a model from onnx: courses/dl1/onnx-import-project.ipynb
+
+
+## changes made
+
+changes were made to the following files:
+
+fastai/layers.py
+
+    added BatchNormContract and BatchNormExpand layers (basically just reshaping to get compatibility with caffe2)
+
+    modified the AdaptiveConcatPool2d to use normal pooling instead of AdaptivePooling , as adaptive pooling is not supported by ONNX yet.
+
+fastai/conv_learner.py
+
+    added setting: fastai.conv_learner.caffe2_batch_norm_compat (default: True) that enables the use of the BatchNormContract and BatchNormExpand layers.
+    (if the model was trained with the original fastai library some changes are necessary to load the weights, please see courses/dl1/onnx-export-project.ipynb)
+
+    changed the create_fc_layer() method to respect the setting
+
+
 

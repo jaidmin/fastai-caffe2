@@ -12,6 +12,8 @@ model_meta = {
 }
 model_features = {inception_4: 3072, dn121: 2048, dn161: 4416,} # nasnetalarge: 4032*2}
 
+caffe2_batch_norm_compat = True
+
 class ConvnetBuilder():
     """Class representing a convolutional network.
 
@@ -54,7 +56,12 @@ class ConvnetBuilder():
     def name(self): return f'{self.f.__name__}_{self.xtra_cut}'
 
     def create_fc_layer(self, ni, nf, p, actn=None):
-        res=[nn.BatchNorm1d(num_features=ni)]
+        res = []
+        if caffe2_batch_norm_compat:
+            res.append(BatchNormExpand())
+        res.append(nn.BatchNorm1d(num_features=ni))
+        if caffe2_batch_norm_compat:
+            res.append(BatchNormContract())
         if p: res.append(nn.Dropout(p=p))
         res.append(nn.Linear(in_features=ni, out_features=nf))
         if actn: res.append(actn)
